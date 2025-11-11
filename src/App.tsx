@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Typography, Box, TextField, Button, Alert } from '@mui/material';
+import { Container, Typography, Box, TextField, Button, Alert, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -10,6 +10,7 @@ function App() {
   const [biasName, setBiasName] = useState('');
   const [biasTone, setBiasTone] = useState('');
   const [notificationTime, setNotificationTime] = useState<Dayjs | null>(dayjs());
+  const [interval, setInterval] = useState(0); // 0 for one-time
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -23,27 +24,38 @@ function App() {
     }
   }, []);
 
-  const handleSave = () => {
-    // TODO: Save the settings to the backend/localStorage
-    console.log({
-      biasName,
-      biasTone,
-      notificationTime: notificationTime ? notificationTime.format('HH:mm') : null,
-    });
-    setStatusMessage('설정이 저장되었습니다!');
-  };
-
   const handleSubscribe = async () => {
     setErrorMessage(null);
     setStatusMessage(null);
     try {
       const token = await getFCMToken();
       if (token) {
+        let finalNotificationTime = dayjs();
+        if (notificationTime) {
+          const now = dayjs();
+          let selectedTime = dayjs()
+            .hour(notificationTime.hour())
+            .minute(notificationTime.minute())
+            .second(0);
+
+          if (selectedTime.isBefore(now)) {
+            // If the selected time is in the past for today, schedule it for tomorrow
+            selectedTime = selectedTime.add(1, 'day');
+          }
+          finalNotificationTime = selectedTime;
+        }
+
         // Send token to your backend to save it
         await fetch('/api/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fcmToken: token, biasName, biasTone, notificationTime: notificationTime ? notificationTime.format('HH:mm') : null }),
+          body: JSON.stringify({
+            fcmToken: token,
+            biasName,
+            biasTone,
+            notificationTime: finalNotificationTime.toISOString(),
+            notification_interval: interval,
+          }),
         });
         setFcmToken(token);
         setIsSubscribed(true);
@@ -93,7 +105,7 @@ function App() {
         <Box
           component="form"
           sx={{
-            '& .MuiTextField-root': { m: 1, width: '100%' },
+            '& .MuiTextField-root, & .MuiFormControl-root': { m: 1, width: '100%' },
             '& .MuiButton-root': { m: 1, width: '100%' },
             mt: 4,
             display: 'flex',
@@ -117,16 +129,28 @@ function App() {
             helperText="알림 메시지가 이 말투로 끝나게 됩니다."
           />
           <TimePicker
-            label="알림 시간"
+            label="첫 알림 시간"
             value={notificationTime}
             onChange={(newValue) => setNotificationTime(newValue)}
-            sx={{ width: '100%' }}
           />
-          <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 2 }}>
-            설정 저장
-          </Button>
+          <FormControl fullWidth>
+            <InputLabel id="interval-select-label">알림 주기</InputLabel>
+            <Select
+              labelId="interval-select-label"
+              id="interval-select"
+              value={interval}
+              label="알림 주기"
+              onChange={(e) => setInterval(Number(e.target.value))}
+            >
+              <MenuItem value={0}>한 번만</MenuItem>
+              <MenuItem value={1}>1시간마다</MenuItem>
+              <MenuItem value={6}>6시간마다</MenuItem>
+              <MenuItem value={12}>12시간마다</MenuItem>
+              <MenuItem value={24}>24시간마다</MenuItem>
+            </Select>
+          </FormControl>
 
-          <Box mt={4}>
+          <Box mt={4} width="100%">
             {!isSubscribed ? (
               <Button variant="contained" color="success" onClick={handleSubscribe}>
                 알림 구독

@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { fcmToken, biasName, biasTone, notificationTime } = req.body;
+  const { fcmToken, biasName, biasTone, notificationTime, notification_interval } = req.body;
 
   if (!fcmToken) {
     return res.status(400).json({ error: 'Missing fcmToken.' });
@@ -28,6 +28,7 @@ export default async function handler(req, res) {
           bias_name: biasName,
           bias_tone: biasTone,
           notification_time: notificationTime,
+          notification_interval: notification_interval,
         }),
       }
     );
