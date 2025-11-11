@@ -31,12 +31,11 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') { // This endpoint will likely be triggered by a cron job, so GET is appropriate
+  if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  // Add security check for cron job
   const authHeader = req.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
@@ -51,14 +50,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const currentTime = dayjs();
-    const currentHourMinute = currentTime.format('HH:mm');
-
-    // Query Supabase for subscriptions matching the current time
+    // Query Supabase for subscriptions that are due
     const { data: subscriptions, error } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('notification_time', currentHourMinute);
+      .lte('notification_time', new Date().toISOString());
 
     if (error) {
       console.error('Error fetching subscriptions:', error);
@@ -71,21 +67,18 @@ export default async function handler(req, res) {
 
     const notificationPromises = subscriptions.map(async (sub) => {
       try {
-        const { fcm_token, bias_name, bias_tone } = sub;
-
-        let notificationTitle = '최애의 알리미';
-        let notificationBody = '';
+        const { id, fcm_token, bias_name, bias_tone, notification_interval, notification_time } = sub;
 
         // Generate personalized message using Gemini AI
         const prompt = `"${bias_name || '당신의 최애'}"의 말투는 "${bias_tone}"입니다. 이 말투를 사용하여 "알림이 왔어요!"라는 내용의 짧고 친근한 알림 메시지를 100자 이내로 생성해주세요.`;
         const result = await geminiModel.generateContent(prompt);
         const response = await result.response;
-        notificationBody = response.text();
+        const notificationBody = response.text();
 
         const message = {
           token: fcm_token,
           notification: {
-            title: notificationTitle,
+            title: '최애의 알리미',
             body: notificationBody,
           },
           webpush: {
@@ -96,11 +89,47 @@ export default async function handler(req, res) {
         };
 
         console.log(`Sending FCM message to ${fcm_token} for ${bias_name}...`);
-        const fcmResponse = await admin.messaging().send(message);
-        console.log(`FCM notification sent successfully:`, fcmResponse);
+        await admin.messaging().send(message);
+        console.log(`FCM notification sent successfully for subscription ${id}`);
+
+        // Post-notification processing
+        if (notification_interval && notification_interval > 0) {
+          // Recurring notification: update to the next time
+          const nextNotificationTime = dayjs(notification_time)
+            .add(notification_interval, 'hour')
+            .toISOString();
+
+          const { error: updateError } = await supabase
+            .from('subscriptions')
+            .update({ notification_time: nextNotificationTime })
+            .eq('id', id);
+
+          if (updateError) {
+            console.error(`Failed to update next notification time for subscription ${id}:`, updateError);
+          } else {
+            console.log(`Updated next notification time for subscription ${id} to ${nextNotificationTime}`);
+          }
+        } else {
+          // One-time notification: delete it
+          const { error: deleteError } = await supabase
+            .from('subscriptions')
+            .delete()
+            .eq('id', id);
+
+          if (deleteError) {
+            console.error(`Failed to delete one-time subscription ${id}:`, deleteError);
+          } else {
+            console.log(`Successfully deleted one-time subscription ${id}`);
+          }
+        }
 
       } catch (notificationError) {
-        console.error(`Error sending notification for subscription ${sub.id}:`, notificationError);
+        if (notificationError.code === 'messaging/registration-token-not-registered') {
+          console.log(`FCM token for subscription ${sub.id} is not registered. Deleting subscription.`);
+          await supabase.from('subscriptions').delete().eq('id', sub.id);
+        } else {
+          console.error(`Error processing subscription ${sub.id}:`, notificationError);
+        }
       }
     });
 
