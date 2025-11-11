@@ -13,5 +13,5 @@ jobs:
       - name: Call send-notifications API
         run: |
           curl --request GET \
-          --url 'https://<YOUR_APP_URL>/api/send-notifications' \
+          --url 'https://belo-noti.vercel.app/api/send-notifications' \
           --header 'Authorization: Bearer ${{ secrets.CRON_SECRET }}'
