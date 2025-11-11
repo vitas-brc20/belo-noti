@@ -5,6 +5,99 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs, { Dayjs } from 'dayjs';
 import { getFCMToken } from './firebase';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+// Define a custom theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#FFB6C1', // Light Pink
+    },
+    secondary: {
+      main: '#ADD8E6', // Light Blue
+    },
+    background: {
+      default: '#F0F8FF', // Alice Blue
+      paper: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white for glassmorphism
+    },
+  },
+  typography: {
+    fontFamily: '"M PLUS Rounded 1c", sans-serif',
+    h4: {
+      fontWeight: 700,
+      color: '#4682B4', // Steel Blue
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '20px',
+          textTransform: 'none',
+          fontWeight: 700,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          '&:hover': {
+            boxShadow: '0 6px 8px rgba(0, 0, 0, 0.15)',
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '15px',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            '& fieldset': {
+              borderColor: '#ADD8E6',
+            },
+            '&:hover fieldset': {
+              borderColor: '#FFB6C1',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#FFB6C1',
+            },
+          },
+          '& .MuiInputLabel-root': {
+            fontFamily: '"M PLUS Rounded 1c", sans-serif',
+          },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          borderRadius: '15px',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          '& fieldset': {
+            borderColor: '#ADD8E6',
+          },
+          '&:hover fieldset': {
+            borderColor: '#FFB6C1',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: '#FFB6C1',
+          },
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: '15px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        },
+      },
+    },
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          paddingTop: '50px', // Add some top padding to the container
+        },
+      },
+    },
+  },
+});
 
 function App() {
   const [biasName, setBiasName] = useState('');
@@ -93,8 +186,8 @@ function App() {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Container maxWidth="sm" style={{ textAlign: 'center', marginTop: '50px' }}>
+    <ThemeProvider theme={theme}>
+      <Container maxWidth="sm">
         <Typography variant="h4" gutterBottom>
           최애의 알리미
         </Typography>
@@ -111,6 +204,12 @@ function App() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            p: 3, // Padding inside the box
+            borderRadius: '25px', // Rounded corners for the box
+            backgroundColor: theme.palette.background.paper, // Semi-transparent background
+            backdropFilter: 'blur(10px)', // Glassmorphism blur effect
+            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)', // Soft shadow
+            border: '1px solid rgba(255, 255, 255, 0.18)', // Subtle border
           }}
           noValidate
           autoComplete="off"
@@ -152,7 +251,7 @@ function App() {
 
           <Box mt={4} width="100%">
             {!isSubscribed ? (
-              <Button variant="contained" color="success" onClick={handleSubscribe}>
+              <Button variant="contained" color="primary" onClick={handleSubscribe}>
                 알림 구독
               </Button>
             ) : (
@@ -163,7 +262,7 @@ function App() {
           </Box>
         </Box>
       </Container>
-    </LocalizationProvider>
+    </ThemeProvider>
   );
 }
 

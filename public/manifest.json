@@ -3,9 +3,14 @@
   "name": "최애의 알리미",
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff",
+  "theme_color": "#FFC0CB",
+  "background_color": "#E0FFFF",
   "icons": [
+    {
+      "src": "/cute-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
     {
       "src": "/android-icon-36x36.png",
       "sizes": "36x36",

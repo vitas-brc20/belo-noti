@@ -3,7 +3,7 @@ name: Send Scheduled Notifications
 on:
   schedule:
     # Runs every 10 minutes
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch: # Allows manual triggering from the GitHub UI
 
 jobs:
