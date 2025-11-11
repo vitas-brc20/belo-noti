@@ -187,81 +187,83 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="sm">
-        <Typography variant="h4" gutterBottom>
-          최애의 알리미
-        </Typography>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Container maxWidth="sm">
+          <Typography variant="h4" gutterBottom>
+            최애의 알리미
+          </Typography>
 
-        {errorMessage && <Alert severity="error" onClose={() => setErrorMessage(null)}>{errorMessage}</Alert>}
-        {statusMessage && <Alert severity="success" onClose={() => setStatusMessage(null)}>{statusMessage}</Alert>}
+          {errorMessage && <Alert severity="error" onClose={() => setErrorMessage(null)}>{errorMessage}</Alert>}
+          {statusMessage && <Alert severity="success" onClose={() => setStatusMessage(null)}>{statusMessage}</Alert>}
 
-        <Box
-          component="form"
-          sx={{
-            '& .MuiTextField-root, & .MuiFormControl-root': { m: 1, width: '100%' },
-            '& .MuiButton-root': { m: 1, width: '100%' },
-            mt: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            p: 3, // Padding inside the box
-            borderRadius: '25px', // Rounded corners for the box
-            backgroundColor: theme.palette.background.paper, // Semi-transparent background
-            backdropFilter: 'blur(10px)', // Glassmorphism blur effect
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)', // Soft shadow
-            border: '1px solid rgba(255, 255, 255, 0.18)', // Subtle border
-          }}
-          noValidate
-          autoComplete="off"
-        >
-          <TextField
-            label="최애 이름"
-            variant="outlined"
-            value={biasName}
-            onChange={(e) => setBiasName(e.target.value)}
-          />
-          <TextField
-            label="최애 말투 (~했당, ~라네 등)"
-            variant="outlined"
-            value={biasTone}
-            onChange={(e) => setBiasTone(e.target.value)}
-            helperText="알림 메시지가 이 말투로 끝나게 됩니다."
-          />
-          <TimePicker
-            label="첫 알림 시간"
-            value={notificationTime}
-            onChange={(newValue) => setNotificationTime(newValue)}
-          />
-          <FormControl fullWidth>
-            <InputLabel id="interval-select-label">알림 주기</InputLabel>
-            <Select
-              labelId="interval-select-label"
-              id="interval-select"
-              value={interval}
-              label="알림 주기"
-              onChange={(e) => setInterval(Number(e.target.value))}
-            >
-              <MenuItem value={0}>한 번만</MenuItem>
-              <MenuItem value={1}>1시간마다</MenuItem>
-              <MenuItem value={6}>6시간마다</MenuItem>
-              <MenuItem value={12}>12시간마다</MenuItem>
-              <MenuItem value={24}>24시간마다</MenuItem>
-            </Select>
-          </FormControl>
+          <Box
+            component="form"
+            sx={{
+              '& .MuiTextField-root, & .MuiFormControl-root': { m: 1, width: '100%' },
+              '& .MuiButton-root': { m: 1, width: '100%' },
+              mt: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              p: 3, // Padding inside the box
+              borderRadius: '25px', // Rounded corners for the box
+              backgroundColor: theme.palette.background.paper, // Semi-transparent background
+              backdropFilter: 'blur(10px)', // Glassmorphism blur effect
+              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)', // Soft shadow
+              border: '1px solid rgba(255, 255, 255, 0.18)', // Subtle border
+            }}
+            noValidate
+            autoComplete="off"
+          >
+            <TextField
+              label="최애 이름"
+              variant="outlined"
+              value={biasName}
+              onChange={(e) => setBiasName(e.target.value)}
+            />
+            <TextField
+              label="최애 말투 (~했당, ~라네 등)"
+              variant="outlined"
+              value={biasTone}
+              onChange={(e) => setBiasTone(e.target.value)}
+              helperText="알림 메시지가 이 말투로 끝나게 됩니다."
+            />
+            <TimePicker
+              label="첫 알림 시간"
+              value={notificationTime}
+              onChange={(newValue) => setNotificationTime(newValue)}
+            />
+            <FormControl fullWidth>
+              <InputLabel id="interval-select-label">알림 주기</InputLabel>
+              <Select
+                labelId="interval-select-label"
+                id="interval-select"
+                value={interval}
+                label="알림 주기"
+                onChange={(e) => setInterval(Number(e.target.value))}
+              >
+                <MenuItem value={0}>한 번만</MenuItem>
+                <MenuItem value={1}>1시간마다</MenuItem>
+                <MenuItem value={6}>6시간마다</MenuItem>
+                <MenuItem value={12}>12시간마다</MenuItem>
+                <MenuItem value={24}>24시간마다</MenuItem>
+              </Select>
+            </FormControl>
 
-          <Box mt={4} width="100%">
-            {!isSubscribed ? (
-              <Button variant="contained" color="primary" onClick={handleSubscribe}>
-                알림 구독
-              </Button>
-            ) : (
-              <Button variant="contained" color="error" onClick={handleUnsubscribe}>
-                알림 구독 취소
-              </Button>
-            )}
+            <Box mt={4} width="100%">
+              {!isSubscribed ? (
+                <Button variant="contained" color="success" onClick={handleSubscribe}>
+                  알림 구독
+                </Button>
+              ) : (
+                <Button variant="contained" color="error" onClick={handleUnsubscribe}>
+                  알림 구독 취소
+                </Button>
+              )}
+            </Box>
           </Box>
-        </Box>
-      </Container>
+        </Container>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 }
