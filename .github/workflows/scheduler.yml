@@ -1,0 +1,17 @@
+name: Send Scheduled Notifications
+
+on:
+  schedule:
+    # Runs every 10 minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
+
+jobs:
+  send-notifications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call send-notifications API
+        run: |
+          curl --request GET \
+          --url 'https://<YOUR_APP_URL>/api/send-notifications' \
+          --header 'Authorization: Bearer ${{ secrets.CRON_SECRET }}'

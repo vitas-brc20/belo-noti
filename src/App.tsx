@@ -1,0 +1,146 @@
+import { useState, useEffect } from 'react';
+import { Container, Typography, Box, TextField, Button, Alert } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import dayjs, { Dayjs } from 'dayjs';
+import { getFCMToken } from './firebase';
+
+function App() {
+  const [biasName, setBiasName] = useState('');
+  const [biasTone, setBiasTone] = useState('');
+  const [notificationTime, setNotificationTime] = useState<Dayjs | null>(dayjs());
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('fcm_token');
+    if (storedToken) {
+      setFcmToken(storedToken);
+      setIsSubscribed(true);
+    }
+  }, []);
+
+  const handleSave = () => {
+    // TODO: Save the settings to the backend/localStorage
+    console.log({
+      biasName,
+      biasTone,
+      notificationTime: notificationTime ? notificationTime.format('HH:mm') : null,
+    });
+    setStatusMessage('설정이 저장되었습니다!');
+  };
+
+  const handleSubscribe = async () => {
+    setErrorMessage(null);
+    setStatusMessage(null);
+    try {
+      const token = await getFCMToken();
+      if (token) {
+        // Send token to your backend to save it
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fcmToken: token, biasName, biasTone, notificationTime: notificationTime ? notificationTime.format('HH:mm') : null }),
+        });
+        setFcmToken(token);
+        setIsSubscribed(true);
+        localStorage.setItem('fcm_token', token);
+        setStatusMessage('알림을 구독했습니다!');
+      } else {
+        setErrorMessage('알림 권한이 허용되지 않았습니다.');
+      }
+    } catch (error) {
+      console.error('Subscription failed:', error);
+      setErrorMessage('알림 구독에 실패했습니다.');
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    setErrorMessage(null);
+    setStatusMessage(null);
+    try {
+      if (fcmToken) {
+        // Send token to your backend to remove it
+        await fetch('/api/unsubscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fcmToken }),
+        });
+        setFcmToken(null);
+        setIsSubscribed(false);
+        localStorage.removeItem('fcm_token');
+        setStatusMessage('알림 구독을 취소했습니다.');
+      }
+    } catch (error) {
+      console.error('Unsubscription failed:', error);
+      setErrorMessage('알림 구독 취소에 실패했습니다.');
+    }
+  };
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Container maxWidth="sm" style={{ textAlign: 'center', marginTop: '50px' }}>
+        <Typography variant="h4" gutterBottom>
+          최애의 알리미
+        </Typography>
+
+        {errorMessage && <Alert severity="error" onClose={() => setErrorMessage(null)}>{errorMessage}</Alert>}
+        {statusMessage && <Alert severity="success" onClose={() => setStatusMessage(null)}>{statusMessage}</Alert>}
+
+        <Box
+          component="form"
+          sx={{
+            '& .MuiTextField-root': { m: 1, width: '100%' },
+            '& .MuiButton-root': { m: 1, width: '100%' },
+            mt: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+          noValidate
+          autoComplete="off"
+        >
+          <TextField
+            label="최애 이름"
+            variant="outlined"
+            value={biasName}
+            onChange={(e) => setBiasName(e.target.value)}
+          />
+          <TextField
+            label="최애 말투 (~했당, ~라네 등)"
+            variant="outlined"
+            value={biasTone}
+            onChange={(e) => setBiasTone(e.target.value)}
+            helperText="알림 메시지가 이 말투로 끝나게 됩니다."
+          />
+          <TimePicker
+            label="알림 시간"
+            value={notificationTime}
+            onChange={(newValue) => setNotificationTime(newValue)}
+            sx={{ width: '100%' }}
+          />
+          <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 2 }}>
+            설정 저장
+          </Button>
+
+          <Box mt={4}>
+            {!isSubscribed ? (
+              <Button variant="contained" color="success" onClick={handleSubscribe}>
+                알림 구독
+              </Button>
+            ) : (
+              <Button variant="contained" color="error" onClick={handleUnsubscribe}>
+                알림 구독 취소
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Container>
+    </LocalizationProvider>
+  );
+}
+
+export default App;
