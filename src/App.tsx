@@ -243,10 +243,11 @@ function App() {
                 onChange={(e) => setInterval(Number(e.target.value))}
               >
                 <MenuItem value={0}>한 번만</MenuItem>
-                <MenuItem value={1}>1시간마다</MenuItem>
-                <MenuItem value={6}>6시간마다</MenuItem>
-                <MenuItem value={12}>12시간마다</MenuItem>
-                <MenuItem value={24}>24시간마다</MenuItem>
+                <MenuItem value={10}>10분마다</MenuItem>
+                <MenuItem value={60}>1시간마다</MenuItem>
+                <MenuItem value={360}>6시간마다</MenuItem>
+                <MenuItem value={720}>12시간마다</MenuItem>
+                <MenuItem value={1440}>24시간마다</MenuItem>
               </Select>
             </FormControl>
 

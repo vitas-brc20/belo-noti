@@ -96,7 +96,7 @@ export default async function handler(req, res) {
         if (notification_interval && notification_interval > 0) {
           // Recurring notification: update to the next time
           const nextNotificationTime = dayjs(notification_time)
-            .add(notification_interval, 'hour')
+            .add(notification_interval, 'minute')
             .toISOString();
 
           const { error: updateError } = await supabase
