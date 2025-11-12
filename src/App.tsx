@@ -108,6 +108,7 @@ function App() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('fcm_token');
@@ -115,7 +116,31 @@ function App() {
       setFcmToken(storedToken);
       setIsSubscribed(true);
     }
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      return;
+    }
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('User accepted the A2HS prompt');
+    } else {
+      console.log('User dismissed the A2HS prompt');
+    }
+    setInstallPrompt(null);
+  };
 
   const handleSubscribe = async () => {
     setErrorMessage(null);
@@ -259,6 +284,11 @@ function App() {
               ) : (
                 <Button variant="contained" color="error" onClick={handleUnsubscribe}>
                   알림 구독 취소
+                </Button>
+              )}
+              {installPrompt && (
+                <Button variant="outlined" color="secondary" onClick={handleInstallClick}>
+                  홈 화면에 추가
                 </Button>
               )}
             </Box>
