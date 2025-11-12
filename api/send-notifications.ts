@@ -28,7 +28,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // Initialize the GoogleGenerativeAI with the API key
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
